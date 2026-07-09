@@ -4,6 +4,7 @@ export enum IpcRequest {
   UpdateBuildStatus = 'UPDATE_BUILD_STATUS',
   ChooseFolder = 'CHOOSE_FOLDER',
   SaveFile = 'SAVE_FILE',
+  DownloadFile = 'DOWNLOAD_FILE',
 }
 
 export interface OpenFileLocationRequestBody {
@@ -27,4 +28,8 @@ export interface SaveFileRequestBody {
 export interface SaveFileResponseBody {
   success: boolean;
   path: string;
+}
+
+export interface DownloadFileRequestBody {
+  url: string;
 }

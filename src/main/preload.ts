@@ -5,6 +5,7 @@ import { IpcRequest } from '../ipc';
 
 export type Channels =
   | IpcRequest.ChooseFolder
+  | IpcRequest.DownloadFile
   | IpcRequest.OpenFileLocation
   | IpcRequest.OpenLogsFolder
   | IpcRequest.SaveFile

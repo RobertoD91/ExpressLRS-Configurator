@@ -71,6 +71,7 @@ import {
 } from '../../gql/generated/types';
 import Loader from '../../components/Loader';
 import {
+  DownloadFileRequestBody,
   IpcRequest,
   OpenFileLocationRequestBody,
   SaveFileRequestBody,
@@ -820,8 +821,15 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
           color="primary"
           size="large"
           variant="contained"
-          href={luaScriptResponse?.luaScript.fileLocation ?? ''}
-          download
+          onClick={() => {
+            const downloadFileRequestBody: DownloadFileRequestBody = {
+              url: luaScriptResponse?.luaScript.fileLocation ?? '',
+            };
+            window.electron.ipcRenderer.sendMessage(
+              IpcRequest.DownloadFile,
+              downloadFileRequestBody,
+            );
+          }}
         >
           {t('ConfiguratorView.DownloadLUAScript')}
         </Button>
