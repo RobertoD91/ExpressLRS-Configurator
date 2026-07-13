@@ -14,7 +14,9 @@ import SupportView from './views/SupportView';
 import HomeView from './views/HomeView';
 import { Config } from './config';
 import { DeviceType, MulticastDnsInformation } from './gql/generated/types';
-import useNetworkDevices from './hooks/useNetworkDevices';
+import useNetworkDevices, {
+  mdnsTypeToDeviceType,
+} from './hooks/useNetworkDevices';
 import WifiDeviceNotification from './components/WifiDeviceNotification';
 import AppStateProvider from './context/AppStateProvider';
 import useBuildProgressNotifications from './hooks/useBuildProgressNotifications';
@@ -60,11 +62,10 @@ const App = () => {
       const dnsDeviceName = dnsDevice?.name ?? null;
       setDevice(dnsDeviceName);
       if (dnsDevice) {
-        const dnsDeviceType = dnsDevice.type.toUpperCase();
-        if (dnsDeviceType === 'TX' || dnsDeviceType === 'RX') {
-          window.location.href = '#/configurator';
-        } else if (dnsDeviceType === 'TXBP' || dnsDeviceType === 'VRX') {
+        if (mdnsTypeToDeviceType(dnsDevice.type) === DeviceType.Backpack) {
           window.location.href = '#/backpack';
+        } else {
+          window.location.href = '#/configurator';
         }
       }
     },

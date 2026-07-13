@@ -18,6 +18,7 @@ import MenuBuilder from './menu';
 import ApiServer from '../api';
 import {
   ChooseFolderResponseBody,
+  DownloadFileRequestBody,
   IpcRequest,
   OpenFileLocationRequestBody,
   SaveFileRequestBody,
@@ -559,3 +560,10 @@ ipcMain.handle(
     };
   },
 );
+
+ipcMain.on(IpcRequest.DownloadFile, (event, arg: DownloadFileRequestBody) => {
+  logger.log('received a request to download file', {
+    url: arg.url,
+  });
+  event.sender.downloadURL(arg.url);
+});

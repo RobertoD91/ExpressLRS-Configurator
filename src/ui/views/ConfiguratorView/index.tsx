@@ -71,6 +71,7 @@ import {
 } from '../../gql/generated/types';
 import Loader from '../../components/Loader';
 import {
+  DownloadFileRequestBody,
   IpcRequest,
   OpenFileLocationRequestBody,
   SaveFileRequestBody,
@@ -78,6 +79,7 @@ import {
   UpdateBuildStatusRequestBody,
 } from '../../../ipc';
 import UserDefinesValidator from './UserDefinesValidator';
+import { mdnsTypeToDeviceType } from '../../hooks/useNetworkDevices';
 import ApplicationStorage from '../../storage';
 import persistDeviceOptions from '../../storage/commands/persistDeviceOptions';
 import mergeWithDeviceOptionsFromStorage from '../../storage/commands/mergeWithDeviceOptionsFromStorage';
@@ -692,6 +694,23 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
     (deviceName: string) => {
       const dnsDevice = networkDevices.get(deviceName);
       if (dnsDevice) {
+        // ignore devices that belong to the other configurator category.
+        // selecting such a device navigates to its own view (see onDeviceChange
+        // in App.tsx) where it is matched correctly, so trying to match it here
+        // would be a false "could not be selected" failure.
+        if (mdnsTypeToDeviceType(dnsDevice.type) !== deviceType) {
+          return;
+        }
+
+        // the device list may still be loading (e.g. on the first visit to the
+        // backpack menu the targets are fetched by checking out the git repo).
+        // defer matching until it is available so we don't show a false
+        // "could not be selected" error; the effect below re-runs this once
+        // deviceTargets is populated.
+        if (!deviceTargets || deviceTargets.length === 0) {
+          return;
+        }
+
         const dnsDeviceName = dnsDevice.deviceName?.toUpperCase();
         const dnsDeviceTarget = dnsDevice.target.toUpperCase();
 
@@ -704,6 +723,16 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
           }
 
           if (item.luaName?.toUpperCase() === dnsDeviceName) {
+            return true;
+          }
+
+          // backpacks advertise their full product name (rather than a lua
+          // name) in the mdns 'product' field, so match it against the device
+          // name to auto-select them.
+          if (
+            dnsDevice.product
+            && item.name?.toUpperCase() === dnsDevice.product.toUpperCase()
+          ) {
             return true;
           }
 
@@ -767,15 +796,17 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
         setWifiDevice(dnsDevice.ip);
       }
     },
-    [deviceTarget, deviceTargets, networkDevices],
+    [deviceTarget, deviceTargets, networkDevices, deviceType],
   );
 
   useEffect(() => {
     if (selectedDevice) {
       handleSelectedDeviceChange(selectedDevice);
     }
+    // re-run when deviceTargets loads so a selection made while the list was
+    // still loading completes instead of failing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDevice]);
+  }, [selectedDevice, deviceTargets]);
 
   const luaDownloadButton = () => {
     if (
@@ -790,8 +821,15 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
           color="primary"
           size="large"
           variant="contained"
-          href={luaScriptResponse?.luaScript.fileLocation ?? ''}
-          download
+          onClick={() => {
+            const downloadFileRequestBody: DownloadFileRequestBody = {
+              url: luaScriptResponse?.luaScript.fileLocation ?? '',
+            };
+            window.electron.ipcRenderer.sendMessage(
+              IpcRequest.DownloadFile,
+              downloadFileRequestBody,
+            );
+          }}
         >
           {t('ConfiguratorView.DownloadLUAScript')}
         </Button>
