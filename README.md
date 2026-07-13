@@ -181,10 +181,12 @@ runtime.
 
 Prerequisites
 
-- node >=16.0
+- node >= 24 (see .nvmrc)
 - git >= 2.25
-- python >= 3.6
-- platformio >= 5.0
+- python >= 3.10
+
+PlatformIO does not need to be installed manually - the application installs
+PlatformIO Core into its own virtual environment on first run.
 
 Start the app in the dev environment:
 
