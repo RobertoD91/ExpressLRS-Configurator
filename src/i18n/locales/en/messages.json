@@ -319,10 +319,8 @@
     "CorruptedPlatformioDependenciesDeleted": "Corrupted platformio dependencies were deleted and git repository was cleaned. Try building again."
   },
   "HomeView": {
-    "Welcome": "Welcome to ExpressLRS Configurator",
-    "Intro": "ExpressLRS Configurator is the official tool for building and flashing ExpressLRS firmware onto your transmitters, receivers, and backpacks. Pick a starting point below.",
     "Flash": {
-      "Title": "What would you like to flash?",
+      "Title": "Flash firmware",
       "ExpressLRS": "ExpressLRS Firmware",
       "ExpressLRSDescription": "Flash the main ExpressLRS firmware to your transmitter or receiver.",
       "Backpack": "Backpack",

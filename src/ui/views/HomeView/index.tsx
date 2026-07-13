@@ -9,7 +9,6 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import WavingHandIcon from '@mui/icons-material/WavingHand';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -154,16 +153,6 @@ const HomeView: FunctionComponent = () => {
   return (
     <MainLayout>
       <Card>
-        <CardTitle
-          icon={<WavingHandIcon />}
-          title={t('HomeView.Welcome')}
-        />
-        <Divider />
-        <CardContent>
-          <Typography variant="body1">{t('HomeView.Intro')}</Typography>
-        </CardContent>
-
-        <Divider />
         <CardTitle
           icon={<FlashOnIcon />}
           title={t('HomeView.Flash.Title')}
