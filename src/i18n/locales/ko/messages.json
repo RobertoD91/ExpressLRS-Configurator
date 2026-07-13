@@ -136,6 +136,7 @@
     "ManualSelectionTitleTooltip": "자동으로 올바른 시리얼 포트가 선택되지 않은 경우, 시리얼 포트를 수동으로 선택해 주세요. 대부분의 경우 이 옵션을 사용할 필요가 없습니다."
   },
   "Sidebar": {
+    "Home": "Home",
     "Configurator": "컨피규레이터",
     "Backpack": "백팩",
     "Logs": "로그 기록",
@@ -316,5 +317,45 @@
     "YouCanManuallyClearAllDependencies": "PlatformIO 의존성 라이브러리를 다운로드하는 동안 Configurator를 닫으면 git 저장소의 상태가 손상될 수 있습니다. 모든 의존성을 수동으로 지우고 빌드 프로세스를 다시 시작할 수 있습니다.",
     "ClearPlatformioDependencies": "PlatformIO 의존성 삭제",
     "CorruptedPlatformioDependenciesDeleted": "손상된 PlatformIO 의존성을 삭제하고 git 저장소를 정리했습니다. 다시 빌드해 보세요."
+  },
+  "HomeView": {
+    "Flash": {
+      "Title": "Flash firmware",
+      "ExpressLRS": "ExpressLRS Firmware",
+      "ExpressLRSDescription": "Flash the main ExpressLRS firmware to your transmitter or receiver.",
+      "Backpack": "Backpack",
+      "BackpackDescription": "Flash the Backpack firmware to TX modules, video receivers, antenna trackers, or race timers."
+    },
+    "Resources": {
+      "Title": "Resources & Getting Started",
+      "GettingStarted": "Getting Started Guide",
+      "GettingStartedDescription": "New to ExpressLRS? Read the step-by-step quick start guide.",
+      "ProductFinder": "Product Finder",
+      "ProductFinderDescription": "Find supported hardware and identify your transmitter or receiver.",
+      "Documentation": "Documentation",
+      "DocumentationDescription": "Browse the full ExpressLRS documentation at expresslrs.org.",
+      "LuaScripts": "Lua Scripts",
+      "LuaScriptsDescription": "Download the ExpressLRS Lua scripts for EdgeTX and OpenTX radios."
+    },
+    "Community": {
+      "Title": "Join the Community",
+      "Subtitle": "Thousands of pilots and developers are already here.",
+      "Discord": "Discord",
+      "DiscordDescription": "Join the conversation. Get help, share builds, and connect with thousands of pilots and developers.",
+      "JoinDiscord": "Join Discord",
+      "Facebook": "Facebook",
+      "FacebookDescription": "Join our Facebook group - one of the most active FPV communities with thousands of members.",
+      "JoinGroup": "Join Group"
+    },
+    "Support": {
+      "Title": "Support the Project",
+      "Subtitle": "Whether you write code, improve documentation, report bugs, or back the project - every contribution matters.",
+      "GitHub": "GitHub",
+      "GitHubDescription": "Help build the future of RC. Code, documentation, and testing - every contribution matters.",
+      "Contribute": "Contribute",
+      "OpenCollective": "OpenCollective",
+      "OpenCollectiveDescription": "Support ExpressLRS development with a one-time or recurring contribution.",
+      "SupportProject": "Support"
+    }
   }
 }
