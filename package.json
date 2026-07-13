@@ -181,7 +181,8 @@
       "json"
     ],
     "testMatch": [
-      "<rootDir>/src/api/**/*.test.ts"
+      "<rootDir>/src/api/**/*.test.ts",
+      "<rootDir>/src/ui/**/*.test.ts"
     ],
     "testPathIgnorePatterns": [
       "release/app/dist",

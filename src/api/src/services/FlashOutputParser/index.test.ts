@@ -160,6 +160,22 @@ describe('createFlashOutputParser', () => {
       );
       expect(errors).toHaveLength(0);
     });
+
+    // Regression: clicking "Flash another" leaves the FC in passthrough mode,
+    // so the second flash prints "Cannot detect RX target, blindly flashing!"
+    // and then succeeds. That warning must not surface as an error — it used
+    // to emit ERROR+TARGET_MISMATCH, which the UI rendered as a red
+    // "Failed to restart device" on a fully successful flash.
+    it('re-flash with FC already in passthrough → zero errors on success', () => {
+      const { parser, emits } = makeParser(flashBf);
+      parser(fixture('bf-passthrough-reflash-success.log'));
+      const errors = emits.filter(
+        (e) => e.type === BuildProgressNotificationType.Error,
+      );
+      expect(errors).toHaveLength(0);
+      const messages = emits.map((e) => e.substep).filter(Boolean);
+      expect(messages[messages.length - 1]).toBe('RESTARTING_DEVICE');
+    });
   });
 
   describe('WiFi happy path (wifi-curl-success.log)', () => {
@@ -234,15 +250,31 @@ describe('createFlashOutputParser', () => {
       expect(errors[0].substep).toBe('WRITING_FIRMWARE');
     });
 
-    it('bf-passthrough-no-fc-detect → Error with TargetMismatch message', () => {
+    it('bf-passthrough-no-fc-detect → Error from the fatal connect failure, not the blind-flash warning', () => {
       const { parser, emits } = makeParser(flashBf);
       parser(fixture('bf-passthrough-no-fc-detect.log'));
+      const errors = emits.filter(
+        (e) => e.type === BuildProgressNotificationType.Error,
+      );
+      // "Cannot detect RX target, blindly flashing!" is a warning and must not
+      // emit; the genuine "A fatal error occurred: Failed to connect" must.
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some((e) => e.substep === 'TARGET_MISMATCH')).toBe(false);
+      expect(errors[0].substep).toBe('CONNECTING_TO_DEVICE');
+    });
+
+    it('"Wrong target selected" → Error with TargetMismatch message', () => {
+      const { parser, emits } = makeParser(flashBf);
+      parser(
+        'Wrong target selected! your RX is \'BAYCK.RRD1\', trying to flash \'HM.EP2400\'\n',
+      );
       const targetMismatch = emits.find(
         (e) =>
           e.type === BuildProgressNotificationType.Error
           && e.substep === 'TARGET_MISMATCH',
       );
       expect(targetMismatch).toBeDefined();
+      expect(targetMismatch?.step).toBe(BuildFirmwareStep.FLASHING_FIRMWARE);
     });
 
     it('uart-esp8266-connect-timeout → Error preserving ConnectingToDevice message', () => {
@@ -263,6 +295,7 @@ describe('createFlashOutputParser', () => {
       );
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].step).toBe(BuildFirmwareStep.FLASHING_FIRMWARE);
+      expect(errors[0].substep).toBe('UPLOADING_FIRMWARE');
     });
 
     it('wifi-curl-connect-refused → Error', () => {

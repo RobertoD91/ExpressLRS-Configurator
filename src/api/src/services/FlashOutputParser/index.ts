@@ -93,9 +93,19 @@ const RULES: Rule[] = [
     step: BuildFirmwareStep.FLASHING_FIRMWARE,
     substep: BuildFirmwareSubstep.ConnectingToDevice,
   },
+  // "Cannot detect RX target, blindly flashing!" is a warning, not an error —
+  // the FC can be left in passthrough mode by a previous flash (e.g. "Flash
+  // another"), in which case the flasher cannot query the running target but
+  // proceeds and typically succeeds. Log-only.
   {
     group: ParserGroup.PassthroughInit,
     pattern: /Cannot detect RX target/i,
+    step: BuildFirmwareStep.FLASHING_FIRMWARE,
+    silent: true,
+  },
+  {
+    group: ParserGroup.PassthroughInit,
+    pattern: /Wrong target selected/i,
     step: BuildFirmwareStep.FLASHING_FIRMWARE,
     type: BuildProgressNotificationType.Error,
     substep: BuildFirmwareSubstep.TargetMismatch,
