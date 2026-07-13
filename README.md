@@ -149,9 +149,9 @@ Our localisation progress:
 
 ## Screenshots
 
-![Main screen](docs/readme/screenshots/main_screen.jpg)
+![Home screen](docs/readme/screenshots/home.png)
 
-![Compile result](docs/readme/screenshots/compile_result.jpg)
+![Flashing screen](docs/readme/screenshots/flashing.png)
 
 ## Architecture
 
