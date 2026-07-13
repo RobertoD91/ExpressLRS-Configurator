@@ -20,7 +20,7 @@ export const Config: IConfig = {
   discordUrl: 'https://discord.gg/dS6ReFY',
   openCollectiveUrl: 'https://opencollective.com/expresslrs',
   gettingStartedUrl: 'https://www.expresslrs.org/quick-start/getting-started/',
-  productFinderUrl: 'https://www.expresslrs.org/hardware/product-finder/',
+  productFinderUrl: 'https://www.expresslrs.org/product-finder/',
   luaScriptsUrl: 'https://github.com/ExpressLRS/Lua-Scripts/',
   expressLRSGit: {
     cloneUrl: 'https://github.com/ExpressLRS/ExpressLRS',
