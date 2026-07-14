@@ -106,6 +106,12 @@
             "deprecationReason": null
           },
           {
+            "name": "INITIATING_PASSTHROUGH",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "VERIFYING_BUILD_SYSTEM",
             "description": null,
             "isDeprecated": false,

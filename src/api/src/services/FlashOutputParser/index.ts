@@ -84,12 +84,27 @@ const RULES: Rule[] = [
   {
     group: ParserGroup.PassthroughInit,
     pattern: /\*\* Searching flight controllers \*\*|\*\* No FC found/i,
-    step: BuildFirmwareStep.FLASHING_FIRMWARE,
+    step: BuildFirmwareStep.INITIATING_PASSTHROUGH,
     substep: BuildFirmwareSubstep.DetectingDevice,
   },
   {
     group: ParserGroup.PassthroughInit,
-    pattern: /Enabling serial passthrough|={4,}\s*RESET TO BOOTLOADER\s*={4,}/i,
+    pattern: /={4,}\s*PASSTHROUGH INIT\s*={4,}|Enabling serial passthrough/i,
+    step: BuildFirmwareStep.INITIATING_PASSTHROUGH,
+    substep: BuildFirmwareSubstep.ConnectingToDevice,
+  },
+  // The unbricking guide tells users to power the receiver the moment
+  // PASSTHROUGH DONE appears — completing this step keeps that signal on
+  // screen for the whole esptool retry window that follows.
+  {
+    group: ParserGroup.PassthroughInit,
+    pattern: /={4,}\s*PASSTHROUGH DONE\s*={4,}/i,
+    step: BuildFirmwareStep.INITIATING_PASSTHROUGH,
+    type: BuildProgressNotificationType.Success,
+  },
+  {
+    group: ParserGroup.PassthroughInit,
+    pattern: /={4,}\s*RESET TO BOOTLOADER\s*={4,}/i,
     step: BuildFirmwareStep.FLASHING_FIRMWARE,
     substep: BuildFirmwareSubstep.ConnectingToDevice,
   },

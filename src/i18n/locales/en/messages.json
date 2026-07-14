@@ -14,6 +14,8 @@
       "VERIFYING_BUILD_SYSTEM": "Verifying build environment",
       "DOWNLOADING_FIRMWARE": "Downloading firmware source",
       "BUILDING_FIRMWARE": "Building firmware",
+      "INITIATING_PASSTHROUGH": "Initiating passthrough",
+      "INITIATING_PASSTHROUGH_completed": "Passthrough done",
       "FLASHING_FIRMWARE": "Flashing firmware to device"
     },
     "Status": {

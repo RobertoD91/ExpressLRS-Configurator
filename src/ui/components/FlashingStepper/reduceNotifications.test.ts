@@ -6,7 +6,7 @@ import {
   BuildProgressNotificationType,
   FlashingMethod,
 } from '../../gql/generated/types';
-import { reduceNotifications } from './reduceNotifications';
+import { highLevelStepsFor, reduceNotifications } from './reduceNotifications';
 
 function n(
   type: BuildProgressNotificationType,
@@ -28,6 +28,7 @@ const {
   VERIFYING_BUILD_SYSTEM,
   DOWNLOADING_FIRMWARE,
   BUILDING_FIRMWARE,
+  INITIATING_PASSTHROUGH,
   FLASHING_FIRMWARE,
 } = BuildFirmwareStep;
 
@@ -79,6 +80,7 @@ describe('reduceNotifications', () => {
       'completed',
       'completed',
       'completed',
+      'completed', // INITIATING_PASSTHROUGH — implicitly completed, no DONE banner in this flow
       'completed',
     ]);
     expect(activeIdx).toBe(steps.length);
@@ -167,5 +169,129 @@ describe('reduceNotifications', () => {
     );
     expect(steps).toHaveLength(3);
     expect(steps.map((s) => s.step)).not.toContain(FLASHING_FIRMWARE);
+  });
+
+  describe('initiating passthrough step', () => {
+    it('is included for passthrough methods on Flash jobs only', () => {
+      for (const method of [
+        FlashingMethod.BetaflightPassthrough,
+        FlashingMethod.EdgeTxPassthrough,
+        FlashingMethod.Passthrough,
+      ]) {
+        expect(highLevelStepsFor(BuildJobType.Flash, method)).toEqual([
+          VERIFYING_BUILD_SYSTEM,
+          DOWNLOADING_FIRMWARE,
+          BUILDING_FIRMWARE,
+          INITIATING_PASSTHROUGH,
+          FLASHING_FIRMWARE,
+        ]);
+        expect(highLevelStepsFor(BuildJobType.Build, method)).toHaveLength(3);
+      }
+      for (const method of [FlashingMethod.UART, FlashingMethod.WIFI]) {
+        expect(highLevelStepsFor(BuildJobType.Flash, method)).not.toContain(
+          INITIATING_PASSTHROUGH,
+        );
+      }
+    });
+
+    it('completes on PASSTHROUGH DONE Success and stays completed while flashing runs', () => {
+      // The recovery window: the completed "Passthrough done" step must remain
+      // visible while esptool retries the connection.
+      const { steps } = reduceNotifications(
+        [
+          ...buildPrelude,
+          n(Info, INITIATING_PASSTHROUGH, BuildFirmwareSubstep.DetectingDevice),
+          n(
+            Info,
+            INITIATING_PASSTHROUGH,
+            BuildFirmwareSubstep.ConnectingToDevice,
+          ),
+          n(Success, INITIATING_PASSTHROUGH),
+          n(Info, FLASHING_FIRMWARE, BuildFirmwareSubstep.ConnectingToDevice),
+        ],
+        BuildJobType.Flash,
+        FlashingMethod.BetaflightPassthrough,
+      );
+      const passthrough = steps.find((s) => s.step === INITIATING_PASSTHROUGH)!;
+      const flashing = steps.find((s) => s.step === FLASHING_FIRMWARE)!;
+      expect(passthrough.status).toBe('completed');
+      expect(flashing.status).toBe('active');
+      expect(flashing.currentSubstep).toBe(
+        BuildFirmwareSubstep.ConnectingToDevice,
+      );
+    });
+
+    it('is implicitly completed when flashing starts without a DONE banner', () => {
+      // "Flash another" leaves the FC in passthrough mode — the flasher skips
+      // straight to the upload without printing PASSTHROUGH DONE.
+      const { steps } = reduceNotifications(
+        [
+          ...buildPrelude,
+          n(Info, FLASHING_FIRMWARE, BuildFirmwareSubstep.ConnectingToDevice),
+        ],
+        BuildJobType.Flash,
+        FlashingMethod.BetaflightPassthrough,
+      );
+      const passthrough = steps.find((s) => s.step === INITIATING_PASSTHROUGH)!;
+      expect(passthrough.status).toBe('completed');
+    });
+
+    it('a failed passthrough init does not paint the never-started flashing step red', () => {
+      // ETX init timeout: the parser attributes the error to the passthrough
+      // step, then the strategy emits its bare terminal ERROR on
+      // FLASHING_FIRMWARE, which never started.
+      const { steps, activeIdx } = reduceNotifications(
+        [
+          ...buildPrelude,
+          n(
+            Info,
+            INITIATING_PASSTHROUGH,
+            BuildFirmwareSubstep.ConnectingToDevice,
+          ),
+          n(
+            Err,
+            INITIATING_PASSTHROUGH,
+            BuildFirmwareSubstep.ConnectingToDevice,
+          ),
+          n(Err, FLASHING_FIRMWARE),
+        ],
+        BuildJobType.Flash,
+        FlashingMethod.EdgeTxPassthrough,
+      );
+      const passthrough = steps.find((s) => s.step === INITIATING_PASSTHROUGH)!;
+      const flashing = steps.find((s) => s.step === FLASHING_FIRMWARE)!;
+      expect(passthrough.status).toBe('error');
+      expect(passthrough.currentSubstep).toBe(
+        BuildFirmwareSubstep.ConnectingToDevice,
+      );
+      expect(flashing.status).toBe('pending');
+      expect(activeIdx).toBe(steps.indexOf(passthrough));
+    });
+
+    it('recovery failure: DONE reached but the receiver never responds', () => {
+      const { steps } = reduceNotifications(
+        [
+          ...buildPrelude,
+          n(
+            Info,
+            INITIATING_PASSTHROUGH,
+            BuildFirmwareSubstep.ConnectingToDevice,
+          ),
+          n(Success, INITIATING_PASSTHROUGH),
+          n(Info, FLASHING_FIRMWARE, BuildFirmwareSubstep.ConnectingToDevice),
+          n(Err, FLASHING_FIRMWARE, BuildFirmwareSubstep.ConnectingToDevice),
+          n(Err, FLASHING_FIRMWARE),
+        ],
+        BuildJobType.Flash,
+        FlashingMethod.BetaflightPassthrough,
+      );
+      const passthrough = steps.find((s) => s.step === INITIATING_PASSTHROUGH)!;
+      const flashing = steps.find((s) => s.step === FLASHING_FIRMWARE)!;
+      expect(passthrough.status).toBe('completed');
+      expect(flashing.status).toBe('error');
+      expect(flashing.currentSubstep).toBe(
+        BuildFirmwareSubstep.ConnectingToDevice,
+      );
+    });
   });
 });

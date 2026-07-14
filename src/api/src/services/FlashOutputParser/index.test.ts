@@ -178,6 +178,89 @@ describe('createFlashOutputParser', () => {
     });
   });
 
+  describe('Initiating passthrough step', () => {
+    it.each([
+      ['Betaflight', flashBf, 'bf-passthrough-esp32c3-success.log'],
+      ['EdgeTX', flashEtx, 'etx-passthrough-esp32-success.log'],
+    ])(
+      '%s: PASSTHROUGH DONE emits Success on INITIATING_PASSTHROUGH before any FLASHING_FIRMWARE emit',
+      (_name, opts, fixtureName) => {
+        const { parser, emits } = makeParser(opts);
+        parser(fixture(fixtureName));
+        const doneIdx = emits.findIndex(
+          (e) =>
+            e.type === BuildProgressNotificationType.Success
+            && e.step === BuildFirmwareStep.INITIATING_PASSTHROUGH,
+        );
+        const firstFlashIdx = emits.findIndex(
+          (e) => e.step === BuildFirmwareStep.FLASHING_FIRMWARE,
+        );
+        expect(doneIdx).toBeGreaterThanOrEqual(0);
+        expect(firstFlashIdx).toBeGreaterThan(doneIdx);
+      },
+    );
+
+    it('re-flash with FC already in passthrough: step activates via INIT banner but never completes', () => {
+      const { parser, emits } = makeParser(flashBf);
+      parser(fixture('bf-passthrough-reflash-success.log'));
+      const passthroughEmits = emits.filter(
+        (e) => e.step === BuildFirmwareStep.INITIATING_PASSTHROUGH,
+      );
+      expect(passthroughEmits.length).toBeGreaterThan(0);
+      expect(
+        passthroughEmits.some(
+          (e) => e.type === BuildProgressNotificationType.Success,
+        ),
+      ).toBe(false);
+    });
+
+    it('etx-passthrough-init-failed → Error on INITIATING_PASSTHROUGH, no Success', () => {
+      const { parser, emits } = makeParser(flashEtx);
+      parser(fixture('etx-passthrough-init-failed.log'));
+      const passthroughEmits = emits.filter(
+        (e) => e.step === BuildFirmwareStep.INITIATING_PASSTHROUGH,
+      );
+      expect(
+        passthroughEmits.some(
+          (e) => e.type === BuildProgressNotificationType.Error,
+        ),
+      ).toBe(true);
+      expect(
+        passthroughEmits.some(
+          (e) => e.type === BuildProgressNotificationType.Success,
+        ),
+      ).toBe(false);
+    });
+
+    // The unbricking recovery scenario: passthrough completes but the receiver
+    // is never powered, so esptool exhausts its connect retries and fails.
+    it('bf-passthrough-done-no-rx → Success on INITIATING_PASSTHROUGH, then connect Error on FLASHING_FIRMWARE', () => {
+      const { parser, emits } = makeParser(flashBf);
+      parser(fixture('bf-passthrough-done-no-rx.log'));
+      const doneIdx = emits.findIndex(
+        (e) =>
+          e.type === BuildProgressNotificationType.Success
+          && e.step === BuildFirmwareStep.INITIATING_PASSTHROUGH,
+      );
+      expect(doneIdx).toBeGreaterThanOrEqual(0);
+      const errors = emits.filter(
+        (e) => e.type === BuildProgressNotificationType.Error,
+      );
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].step).toBe(BuildFirmwareStep.FLASHING_FIRMWARE);
+      expect(errors[0].substep).toBe('CONNECTING_TO_DEVICE');
+    });
+
+    it('UART method never emits INITIATING_PASSTHROUGH even on passthrough output', () => {
+      const { parser, emits } = makeParser(flashUart);
+      parser(fixture('bf-passthrough-esp32c3-success.log'));
+      const passthroughEmits = emits.filter(
+        (e) => e.step === BuildFirmwareStep.INITIATING_PASSTHROUGH,
+      );
+      expect(passthroughEmits).toHaveLength(0);
+    });
+  });
+
   describe('WiFi happy path (wifi-curl-success.log)', () => {
     it('emits UploadingFirmware with monotonic progress', () => {
       const { parser, emits } = makeParser(flashWifi);
@@ -314,16 +397,16 @@ describe('createFlashOutputParser', () => {
       expect(writing).toHaveLength(0);
     });
 
-    it('etx-passthrough-expect-timeout → Error on FLASHING_FIRMWARE via Traceback regex', () => {
+    it('etx-passthrough-expect-timeout → Error on INITIATING_PASSTHROUGH via Traceback regex', () => {
       const { parser, emits } = makeParser(flashEtx);
       parser(fixture('etx-passthrough-expect-timeout.log'));
       const errors = emits.filter(
         (e) => e.type === BuildProgressNotificationType.Error,
       );
       expect(errors.length).toBeGreaterThan(0);
-      expect(errors[0].step).toBe(BuildFirmwareStep.FLASHING_FIRMWARE);
-      // Last good message was DetectingDevice (from "Searching flight controllers")
-      expect(errors[0].substep).toBe('DETECTING_DEVICE');
+      expect(errors[0].step).toBe(BuildFirmwareStep.INITIATING_PASSTHROUGH);
+      // Last good message was ConnectingToDevice (from the PASSTHROUGH INIT banner)
+      expect(errors[0].substep).toBe('CONNECTING_TO_DEVICE');
     });
 
     it('build-only-uploadforce-error → BUILDING_FIRMWARE Error', () => {

@@ -51,10 +51,15 @@ export function highLevelStepsFor(
       BuildFirmwareStep.BUILDING_FIRMWARE,
     ];
   }
+  const isPassthrough
+    = flashingMethod === FlashingMethod.BetaflightPassthrough
+      || flashingMethod === FlashingMethod.EdgeTxPassthrough
+      || flashingMethod === FlashingMethod.Passthrough;
   return [
     BuildFirmwareStep.VERIFYING_BUILD_SYSTEM,
     BuildFirmwareStep.DOWNLOADING_FIRMWARE,
     BuildFirmwareStep.BUILDING_FIRMWARE,
+    ...(isPassthrough ? [BuildFirmwareStep.INITIATING_PASSTHROUGH] : []),
     BuildFirmwareStep.FLASHING_FIRMWARE,
   ];
 }
@@ -92,6 +97,20 @@ export function reduceNotifications(
     }
     const substep = parseSubstep(n.substep);
     if (n.type === BuildProgressNotificationType.Error) {
+      // The strategies emit a substep-less terminal ERROR on the final step
+      // even when the failure happened in an earlier step (e.g. passthrough
+      // init never completed, so FLASHING_FIRMWARE never started). Don't
+      // paint a never-started step red when the failure is already
+      // attributed upstream.
+      if (
+        substep === undefined
+        && target.status === 'pending'
+        && stepOrder
+          .slice(0, stepOrder.indexOf(n.step))
+          .some((s) => byStep.get(s)!.status === 'error')
+      ) {
+        continue;
+      }
       const wasAlreadyError = target.status === 'error';
       target.status = 'error';
       target.currentSubstep
@@ -113,14 +132,19 @@ export function reduceNotifications(
     if (n.progress != null) target.progress = n.progress;
   }
 
-  // Any step before the latest-seen that's still 'active' is implicitly complete
-  // (we've moved past it). Errors remain errors.
+  // Any step before the latest-seen that's still 'active' or 'pending' is
+  // implicitly complete (we've moved past it). 'pending' matters for
+  // INITIATING_PASSTHROUGH, which is fed only by parser regexes and must not
+  // sit as an unchecked circle above an active step if the flasher output
+  // ever changes. Errors remain errors.
   const lastSeen = seen[seen.length - 1];
   if (lastSeen) {
     const lastIdx = stepOrder.indexOf(lastSeen);
     for (let i = 0; i < lastIdx; i += 1) {
       const step = byStep.get(stepOrder[i])!;
-      if (step.status === 'active') step.status = 'completed';
+      if (step.status === 'active' || step.status === 'pending') {
+        step.status = 'completed';
+      }
     }
   }
 
