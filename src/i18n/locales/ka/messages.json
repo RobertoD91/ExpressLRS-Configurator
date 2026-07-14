@@ -14,6 +14,8 @@
       "VERIFYING_BUILD_SYSTEM": "კომპილაციის გარემოს შემოწმება",
       "DOWNLOADING_FIRMWARE": "პროგრამული უზრუნველყოფის საწყისი კოდის ჩამოტვირთვა",
       "BUILDING_FIRMWARE": "პროგრამული უზრუნველყოფის კომპილაცია",
+      "INITIATING_PASSTHROUGH": "Initiating passthrough",
+      "INITIATING_PASSTHROUGH_completed": "Passthrough done",
       "FLASHING_FIRMWARE": "პროგრამული უზრუნველყოფის ჩაწერა მოწყობილობაში"
     },
     "Status": {
@@ -136,7 +138,7 @@
     "ManualSelectionTitleTooltip": "გამოიყენეთ სერიული პორტის მექანიკური არჩევა, თუ ავტომატური რეჟიმი ვერ პოულობს სწორ პორტს. შემთხვევათა უმრავლესობაში ამ პარამეტრის გამოყენება საჭირო არ არის."
   },
   "Sidebar": {
-    "Home": "Home",
+    "Home": "სახლი",
     "Configurator": "კონფიგურატორი",
     "Backpack": "Backpack",
     "Logs": "ლოგები",
@@ -320,42 +322,42 @@
   },
   "HomeView": {
     "Flash": {
-      "Title": "Flash firmware",
-      "ExpressLRS": "ExpressLRS Firmware",
-      "ExpressLRSDescription": "Flash the main ExpressLRS firmware to your transmitter or receiver.",
-      "Backpack": "Backpack",
-      "BackpackDescription": "Flash the Backpack firmware to TX modules, video receivers, antenna trackers, or race timers."
+      "Title": "პროგრამული უზრუნველყოფის ჩაწერა",
+      "ExpressLRS": "ExpressLRS პროგრამული უზრუნველყოფა",
+      "ExpressLRSDescription": "ჩაწერეთ ExpressLRS-ის მთავარი პროგრამული უზრუნველყოფა თქვენს გადამცემსა ან მიმღებში.",
+      "Backpack": "დამხმარე მოდული",
+      "BackpackDescription": "ჩაწერეთ დამხმარე მოდულის პროგრამული უზრუნველყოფა TX მოდულებში, ვიდეო მიმღებებში, ანტენის ტრეკერებსა ან რბოლის ტაიმერებში."
     },
     "Resources": {
-      "Title": "Resources & Getting Started",
-      "GettingStarted": "Getting Started Guide",
-      "GettingStartedDescription": "New to ExpressLRS? Read the step-by-step quick start guide.",
-      "ProductFinder": "Product Finder",
-      "ProductFinderDescription": "Find supported hardware and identify your transmitter or receiver.",
-      "Documentation": "Documentation",
-      "DocumentationDescription": "Browse the full ExpressLRS documentation at expresslrs.org.",
-      "LuaScripts": "Lua Scripts",
-      "LuaScriptsDescription": "Download the ExpressLRS Lua scripts for EdgeTX and OpenTX radios."
+      "Title": "რესურსები და მუშაობის დაწყება",
+      "GettingStarted": "საწყისი გზამკვლევი",
+      "GettingStartedDescription": "ახალი ხართ ExpressLRS-ში? წაიკითხეთ ნაბიჯ-ნაბიჯ საწყისი გზამკვლევი.",
+      "ProductFinder": "პროდუქტის ძებნა",
+      "ProductFinderDescription": "იპოვეთ მხარდაჭერილი აპარატურა და მოახდინეთ თქვენი გადამცემის ან მიმღების იდენტიფიცირება.",
+      "Documentation": "დოკუმენტაცია",
+      "DocumentationDescription": "გაეცანით ExpressLRS-ის სრულ დოკუმენტაციას საიტზე expresslrs.org.",
+      "LuaScripts": "Lua სკრიპტები",
+      "LuaScriptsDescription": "ჩამოტვირთეთ ExpressLRS Lua სკრიპტები EdgeTX და OpenTX რადიოებისთვის."
     },
     "Community": {
-      "Title": "Join the Community",
-      "Subtitle": "Thousands of pilots and developers are already here.",
+      "Title": "შემოუერთდით საზოგადოებას",
+      "Subtitle": "ათასობით პილოტი და დეველოპერი უკვე აქ არის.",
       "Discord": "Discord",
-      "DiscordDescription": "Join the conversation. Get help, share builds, and connect with thousands of pilots and developers.",
-      "JoinDiscord": "Join Discord",
+      "DiscordDescription": "ჩაერთეთ დისკუსიაში. მიიღეთ დახმარება, გააზიარეთ თქვენი აწყობილი დრონები და დაუკავშირდით ათასობით პილოტსა და დეველოპერს.",
+      "JoinDiscord": "შეუერთდი Discord",
       "Facebook": "Facebook",
-      "FacebookDescription": "Join our Facebook group - one of the most active FPV communities with thousands of members.",
-      "JoinGroup": "Join Group"
+      "FacebookDescription": "შემოუერთდით ჩვენს Facebook ჯგუფს — ერთ-ერთ ყველაზე აქტიურ FPV საზოგადოებას ათასობით წევრით.",
+      "JoinGroup": "შემოუერთდით ჯგუფს"
     },
     "Support": {
-      "Title": "Support the Project",
-      "Subtitle": "Whether you write code, improve documentation, report bugs, or back the project - every contribution matters.",
+      "Title": "პროექტის მხარდაჭერა",
+      "Subtitle": "წერთ კოდს, აუმჯობესებთ დოკუმენტაციას, აფიქსირებთ ხარვეზებს თუ ფინანსურად მხარს უჭერთ პროექტს — ნებისმიერ წვლილს დიდი მნიშვნელობა აქვს.",
       "GitHub": "GitHub",
-      "GitHubDescription": "Help build the future of RC. Code, documentation, and testing - every contribution matters.",
-      "Contribute": "Contribute",
+      "GitHubDescription": "დაგვეხმარეთ RC-ის მომავლის შექმნაში. კოდი, დოკუმენტაცია და ტესტირება — ნებისმიერ წვლილს დიდი მნიშვნელობა აქვს.",
+      "Contribute": "შემოწირულობა",
       "OpenCollective": "OpenCollective",
-      "OpenCollectiveDescription": "Support ExpressLRS development with a one-time or recurring contribution.",
-      "SupportProject": "Support"
+      "OpenCollectiveDescription": "მხარი დაუჭირეთ ExpressLRS-ის განვითარებას ერთჯერადი ან ყოველთვიური წვლილით.",
+      "SupportProject": "მხარდაჭერა"
     }
   }
 }

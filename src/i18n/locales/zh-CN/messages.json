@@ -14,6 +14,8 @@
       "VERIFYING_BUILD_SYSTEM": "正在验证编译环境",
       "DOWNLOADING_FIRMWARE": "正在下载固件源",
       "BUILDING_FIRMWARE": "正在编译固件",
+      "INITIATING_PASSTHROUGH": "Initiating passthrough",
+      "INITIATING_PASSTHROUGH_completed": "Passthrough done",
       "FLASHING_FIRMWARE": "正在刷入固件至设备"
     },
     "Status": {
