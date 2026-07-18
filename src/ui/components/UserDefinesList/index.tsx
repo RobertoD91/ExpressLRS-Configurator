@@ -1,14 +1,19 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import {
   Checkbox,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemSecondaryAction,
   ListItemText,
+  Menu,
+  MenuItem,
   TextField,
+  Tooltip,
 } from '@mui/material';
+import { History } from '@mui/icons-material';
 import { SxProps, Theme } from '@mui/system';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +24,7 @@ import {
 import Omnibox from '../Omnibox';
 import UserDefineDescription from '../UserDefineDescription';
 import SensitiveTextField from '../SensitiveTextField';
+import ApplicationStorage from '../../storage';
 
 const styles: Record<string, SxProps<Theme>> = {
   icon: {
@@ -40,6 +46,20 @@ interface UserDefinesListProps {
 const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
   const { options, onChange } = props;
   const { t } = useTranslation();
+
+  const [bindingPhraseHistory, setBindingPhraseHistory] = useState<string[]>(
+    [],
+  );
+  const [historyAnchorEl, setHistoryAnchorEl] = useState<HTMLElement | null>(
+    null,
+  );
+
+  useEffect(() => {
+    (async () => {
+      const storage = new ApplicationStorage();
+      setBindingPhraseHistory(await storage.getBindingPhraseHistory());
+    })();
+  }, []);
 
   const onChecked = (data: UserDefineKey) => {
     const opt = options.find(({ key }) => key === data);
@@ -135,6 +155,45 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
                     fullWidth
                     label={inputLabel(item.key)}
                   />
+                )}
+                {item.key === UserDefineKey.BINDING_PHRASE
+                  && bindingPhraseHistory.length > 0 && (
+                  <>
+                    <Tooltip
+                      title={t('UserDefinesList.BindingPhraseHistory')}
+                    >
+                      <IconButton
+                        aria-label={t('UserDefinesList.BindingPhraseHistory')}
+                        onClick={(event) => {
+                          setHistoryAnchorEl(event.currentTarget);
+                        }}
+                      >
+                        <History />
+                      </IconButton>
+                    </Tooltip>
+                    <Menu
+                      anchorEl={historyAnchorEl}
+                      open={historyAnchorEl !== null}
+                      onClose={() => {
+                        setHistoryAnchorEl(null);
+                      }}
+                    >
+                      {bindingPhraseHistory.map((phrase) => (
+                        <MenuItem
+                          key={phrase}
+                          onClick={() => {
+                            onChange({
+                              ...item,
+                              value: phrase,
+                            });
+                            setHistoryAnchorEl(null);
+                          }}
+                        >
+                          {phrase}
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
                 )}
               </ListItem>
             )}
