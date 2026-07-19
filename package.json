@@ -38,19 +38,19 @@
       "package.json",
       "devices/"
     ],
-    "afterSign": ".erb/scripts/notarize.js",
+    "afterPack": ".erb/scripts/mac-dependencies.js",
     "mac": {
       "target": [
         "dmg"
       ],
       "type": "distribution",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
       "hardenedRuntime": true,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
       "category": "public.app-category.developer-tools",
       "extraFiles": [
-        "dependencies/darwin_amd64",
         "dependencies/get-platformio.py"
       ]
     },
@@ -191,7 +191,6 @@
   },
   "resolutions": {},
   "devDependencies": {
-    "@electron/notarize": "^3.1.0",
     "@electron/rebuild": "^4.0.0",
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/introspection": "^5.0.0",
