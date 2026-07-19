@@ -51,6 +51,12 @@ jobs:
           yarn build
           yarn electron-builder --publish always --x64 --win
 
+      - name: Download macOS portable dependencies
+        if: matrix.os == 'macos-15'
+        run: |
+          ./dependencies/download-mac-dependencies.sh x64
+          ./dependencies/download-mac-dependencies.sh arm64
+
       - name: Publish macOS releases
         if: matrix.os == 'macos-15'
         env:
@@ -63,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           yarn build
-          yarn electron-builder --publish always --x64 --mac
+          yarn electron-builder --publish always --x64 --arm64 --mac
 
       - name: Publish Linux releases
         if: matrix.os == 'ubuntu-22.04'

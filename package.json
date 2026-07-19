@@ -50,7 +50,10 @@
       "gatekeeperAssess": false,
       "category": "public.app-category.developer-tools",
       "extraFiles": [
-        "dependencies/darwin_amd64",
+        {
+          "from": "dependencies/darwin_${arch}",
+          "to": "dependencies/darwin_${arch}"
+        },
         "dependencies/get-platformio.py"
       ]
     },
