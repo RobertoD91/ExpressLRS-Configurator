@@ -60,16 +60,24 @@ jobs:
       - name: Publish macOS releases
         if: matrix.os == 'macos-15'
         env:
-          # These values are used for auto updates signing
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
-          # CSC_LINK: ${{ secrets.CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Code signing and notarization secrets, see
+          # docs/macos-code-signing.md. When they are not configured the
+          # steps are skipped and the build stays unsigned, like before.
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # This is used for uploading release assets to github
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # electron-builder treats an empty CSC_LINK as a certificate to
+          # import, drop the signing variables when the secrets are missing
+          if [ -z "$CSC_LINK" ]; then
+            unset CSC_LINK CSC_KEY_PASSWORD
+          fi
           yarn build
-          yarn electron-builder --publish always --x64 --arm64 --mac
+          yarn electron-builder --publish always --x64 --arm64 --universal --mac
 
       - name: Publish Linux releases
         if: matrix.os == 'ubuntu-22.04'
