@@ -23,6 +23,13 @@ PYTHON_BUILD_TAG="20260610"
 PYTHON_SHA256_X64="43f9833eabca62f2c9d8d3a3fb35835d6116386d871cb842c1ec2f08a8d27bd7"
 PYTHON_SHA256_ARM64="953db72ff2dea68b5112231b1ba77163ec9114f87c7ece530b3ea742a3b492c5"
 
+# pure Python wheels installed into the bundled interpreter, pinned like the
+# archives above so the same commit always produces the same bundle
+PYSERIAL_VERSION="3.5"
+PYSERIAL_WHEEL_SHA256="c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"
+SETUPTOOLS_VERSION="83.0.0"
+SETUPTOOLS_WHEEL_SHA256="29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3"
+
 GIT_VERSION="2.53.0"
 GIT_RELEASE_TAG="v2.53.0-3"
 GIT_RELEASE_SUFFIX="f49d009"
@@ -96,7 +103,13 @@ fetch() {
 }
 
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+# each tool is prepared inside a staging directory on the same filesystem and
+# moved to its final location as the last step, so a failed or interrupted run
+# never leaves a partial directory behind that a retry would then skip
+STAGING="${TMP_DIR}/staging"
+trap 'rm -rf "$TMP_DIR" "$STAGING"' EXIT
+mkdir -p "$DEST_DIR"
+STAGING="$(mktemp -d "${DEST_DIR}/.staging.XXXXXX")"
 
 echo "Fetching macOS ${ARCH} dependencies into dependencies/${DEST_DIR}"
 
@@ -105,19 +118,22 @@ if [ -d "$PYTHON_DEST" ]; then
   echo "Skipping Python, ${PYTHON_DEST} already exists (delete it to re-download)"
 else
   archive="$(fetch "$PYTHON_URL" "$PYTHON_ARCHIVE" "$PYTHON_SHA256")"
-  mkdir -p "${TMP_DIR}/python"
-  tar xzf "$archive" -C "${TMP_DIR}/python"
-  mkdir -p "$DEST_DIR"
   # the tarball contains a single top level "python" directory
-  mv "${TMP_DIR}/python/python" "$PYTHON_DEST"
+  tar xzf "$archive" -C "$STAGING"
 
   # pyserial is required by the firmware flashing scripts and setuptools
   # provides the distutils shim required by the PlatformIO installer on
   # Python >= 3.12. Both are pure Python wheels, so any host interpreter can
   # install them into the bundle.
-  python3 -m pip install --quiet --no-compile \
-    --target "${PYTHON_DEST}/lib/python${PYTHON_VERSION%.*}/site-packages" \
-    pyserial setuptools
+  cat > "${TMP_DIR}/requirements.txt" <<EOF
+pyserial==${PYSERIAL_VERSION} --hash=sha256:${PYSERIAL_WHEEL_SHA256}
+setuptools==${SETUPTOOLS_VERSION} --hash=sha256:${SETUPTOOLS_WHEEL_SHA256}
+EOF
+  python3 -m pip install --quiet --no-compile --no-deps --require-hashes \
+    --target "${STAGING}/python/lib/python${PYTHON_VERSION%.*}/site-packages" \
+    --requirement "${TMP_DIR}/requirements.txt"
+
+  mv "${STAGING}/python" "$PYTHON_DEST"
   echo "Installed Python ${PYTHON_VERSION} to dependencies/${PYTHON_DEST}"
 fi
 
@@ -126,8 +142,9 @@ if [ -d "$GIT_DEST" ]; then
   echo "Skipping git, ${GIT_DEST} already exists (delete it to re-download)"
 else
   archive="$(fetch "$GIT_URL" "$GIT_ARCHIVE" "$GIT_SHA256")"
-  mkdir -p "$GIT_DEST"
-  tar xzf "$archive" -C "$GIT_DEST"
+  mkdir -p "${STAGING}/git-portable"
+  tar xzf "$archive" -C "${STAGING}/git-portable"
+  mv "${STAGING}/git-portable" "$GIT_DEST"
   echo "Installed git ${GIT_VERSION} to dependencies/${GIT_DEST}"
 fi
 
