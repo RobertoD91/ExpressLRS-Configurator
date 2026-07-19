@@ -8,6 +8,11 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-22.04', 'windows-2022', 'macos-15']
+    env:
+      # electron and electron-builder download caches, kept warm by the
+      # "Cache electron downloads" step below
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
     steps:
       - name: Setup apt dependencies
         if: matrix.os == 'ubuntu-22.04'
@@ -32,6 +37,16 @@ jobs:
       - name: Install setuptools
         run: pip install setuptools
 
+      - name: Cache electron downloads
+        uses: actions/cache@v6
+        with:
+          path: |
+            .cache/electron
+            .cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            electron-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           yarn install --prefer-offline --network-timeout 180000
@@ -51,8 +66,17 @@ jobs:
           yarn build
           yarn electron-builder --publish always --x64 --win
 
+      - name: Cache macOS portable dependencies
+        if: matrix.os == 'macos-15'
+        uses: actions/cache@v6
+        with:
+          path: .cache/mac-dependencies
+          key: mac-dependencies-${{ hashFiles('dependencies/download-mac-dependencies.sh') }}
+
       - name: Download macOS portable dependencies
         if: matrix.os == 'macos-15'
+        env:
+          DOWNLOAD_CACHE_DIR: ${{ github.workspace }}/.cache/mac-dependencies
         run: |
           ./dependencies/download-mac-dependencies.sh x64
           ./dependencies/download-mac-dependencies.sh arm64

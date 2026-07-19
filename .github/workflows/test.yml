@@ -17,6 +17,12 @@ jobs:
       matrix:
         os: ['ubuntu-22.04', 'windows-2022', 'macos-latest']
 
+    env:
+      # electron and electron-builder download caches, kept warm by the
+      # "Cache electron downloads" step below
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+
     steps:
       - name: Setup apt dependencies
         if: matrix.os == 'ubuntu-22.04'
@@ -40,6 +46,16 @@ jobs:
       # required for node gyp / serialport module
       - run: pip install setuptools
 
+      - name: Cache electron downloads
+        uses: actions/cache@v6
+        with:
+          path: |
+            .cache/electron
+            .cache/electron-builder
+          key: electron-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            electron-${{ runner.os }}-
+
       - name: Install dependencies
         run: |
           yarn install --network-timeout 180000
@@ -56,8 +72,17 @@ jobs:
         run: |
           yarn test
 
+      - name: Cache macOS portable dependencies
+        if: matrix.os == 'macos-latest'
+        uses: actions/cache@v6
+        with:
+          path: .cache/mac-dependencies
+          key: mac-dependencies-${{ hashFiles('dependencies/download-mac-dependencies.sh') }}
+
       - name: Download macOS portable dependencies
         if: matrix.os == 'macos-latest'
+        env:
+          DOWNLOAD_CACHE_DIR: ${{ github.workspace }}/.cache/mac-dependencies
         run: |
           ./dependencies/download-mac-dependencies.sh x64
           ./dependencies/download-mac-dependencies.sh arm64

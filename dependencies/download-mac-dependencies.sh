@@ -12,8 +12,8 @@
 # Python comes from the astral-sh/python-build-standalone project
 # (relocatable CPython builds), git comes from desktop/dugite-native
 # (the relocatable git distribution used by GitHub Desktop). Set
-# DOWNLOAD_CACHE_DIR to a directory with previously downloaded archives to
-# skip the network fetch; checksums are verified either way.
+# DOWNLOAD_CACHE_DIR to a directory where downloaded archives are stored and
+# reused across runs; checksums are verified on every run either way.
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -84,17 +84,27 @@ sha256() {
 
 fetch() {
   # fetch <url> <archive-name> <sha256> -> prints path of the verified archive
+  #
+  # When DOWNLOAD_CACHE_DIR is set, archives are stored there and reused by
+  # later runs (CI keeps the directory in the actions cache). The checksum is
+  # verified on every run, also for cached files: a corrupted or tampered
+  # archive fails the build and is deleted so the next run downloads it again.
   local url="$1" name="$2" expected="$3" archive
-  if [ -n "${DOWNLOAD_CACHE_DIR:-}" ] && [ -f "${DOWNLOAD_CACHE_DIR}/${name}" ]; then
+  if [ -n "${DOWNLOAD_CACHE_DIR:-}" ]; then
+    mkdir -p "$DOWNLOAD_CACHE_DIR"
     archive="${DOWNLOAD_CACHE_DIR}/${name}"
   else
     archive="${TMP_DIR}/${name}"
-    curl -fL --retry 3 -o "$archive" "$url" >&2
+  fi
+  if [ ! -f "$archive" ]; then
+    curl -fL --retry 3 -o "${archive}.part" "$url" >&2
+    mv "${archive}.part" "$archive"
   fi
   local actual
   actual="$(sha256 "$archive")"
   if [ "$actual" != "$expected" ]; then
-    echo "Error: checksum mismatch for ${name}" >&2
+    rm -f "$archive"
+    echo "Error: checksum mismatch for ${name}, the file has been deleted, please retry" >&2
     echo "  expected: ${expected}" >&2
     echo "  actual:   ${actual}" >&2
     exit 1
