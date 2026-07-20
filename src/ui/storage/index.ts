@@ -59,6 +59,12 @@ export interface IApplicationStorage {
   setThemeMode(value: string): void;
 
   getThemeMode(): string | null;
+
+  getBindingPhraseHistory(): Promise<string[]>;
+
+  addBindingPhraseToHistory(phrase: string): Promise<void>;
+
+  removeBindingPhraseFromHistory(phrase: string): Promise<void>;
 }
 
 const DEVICE_OPTIONS_BY_TARGET_KEYSPACE = 'device_options';
@@ -66,6 +72,8 @@ const FIRMWARE_SOURCE_KEY = 'firmware_source';
 const UI_SHOW_FIRMWARE_PRE_RELEASES = 'ui_show_pre_releases';
 const EXPERT_MODE = 'expert_mode';
 const THEME_MODE_KEY = 'theme_mode';
+const BINDING_PHRASE_HISTORY_KEY = 'binding_phrase_history';
+const BINDING_PHRASE_HISTORY_LIMIT = 15;
 
 export default class ApplicationStorage implements IApplicationStorage {
   async saveDeviceOptions(
@@ -266,5 +274,43 @@ export default class ApplicationStorage implements IApplicationStorage {
 
   getThemeMode(): string | null {
     return localStorage.getItem(THEME_MODE_KEY);
+  }
+
+  async getBindingPhraseHistory(): Promise<string[]> {
+    const value = localStorage.getItem(BINDING_PHRASE_HISTORY_KEY);
+    if (value === null) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item): item is string => {
+          return typeof item === 'string';
+        });
+      }
+      return [];
+    } catch (e) {
+      console.error(`failed to parse ${BINDING_PHRASE_HISTORY_KEY}`, e);
+      return [];
+    }
+  }
+
+  async addBindingPhraseToHistory(phrase: string): Promise<void> {
+    const trimmed = phrase.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    const history = await this.getBindingPhraseHistory();
+    const updated = [
+      trimmed,
+      ...history.filter((item) => item !== trimmed),
+    ].slice(0, BINDING_PHRASE_HISTORY_LIMIT);
+    localStorage.setItem(BINDING_PHRASE_HISTORY_KEY, JSON.stringify(updated));
+  }
+
+  async removeBindingPhraseFromHistory(phrase: string): Promise<void> {
+    const history = await this.getBindingPhraseHistory();
+    const updated = history.filter((item) => item !== phrase);
+    localStorage.setItem(BINDING_PHRASE_HISTORY_KEY, JSON.stringify(updated));
   }
 }

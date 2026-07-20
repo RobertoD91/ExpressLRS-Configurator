@@ -629,6 +629,16 @@ const ConfiguratorView: FunctionComponent<ConfiguratorViewProps> = (props) => {
       deviceOptionsFormData.userDefineOptions,
     );
 
+    // remember the binding phrase that is actually used for a build
+    const bindingPhrase = userDefines.find(
+      (userDefine) =>
+        userDefine.key === UserDefineKey.BINDING_PHRASE && userDefine.enabled,
+    )?.value;
+    if (bindingPhrase) {
+      const storage = new ApplicationStorage();
+      storage.addBindingPhraseToHistory(bindingPhrase);
+    }
+
     if (device?.parent && device?.name) {
       const deviceName = getAbbreviatedDeviceName(device);
       // add the user define for the device name

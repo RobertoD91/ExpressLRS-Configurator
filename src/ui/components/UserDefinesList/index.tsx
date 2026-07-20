@@ -1,14 +1,19 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import {
   Checkbox,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemSecondaryAction,
   ListItemText,
+  Menu,
+  MenuItem,
   TextField,
+  Tooltip,
 } from '@mui/material';
+import { Close, History } from '@mui/icons-material';
 import { SxProps, Theme } from '@mui/system';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,6 +24,7 @@ import {
 import Omnibox from '../Omnibox';
 import UserDefineDescription from '../UserDefineDescription';
 import SensitiveTextField from '../SensitiveTextField';
+import ApplicationStorage from '../../storage';
 
 const styles: Record<string, SxProps<Theme>> = {
   icon: {
@@ -30,6 +36,16 @@ const styles: Record<string, SxProps<Theme>> = {
       backgroundColor: 'transparent !important',
     },
   },
+  historyPhrase: {
+    marginRight: 2,
+  },
+};
+
+const maskPhrase = (phrase: string): string => {
+  if (phrase.length <= 8) {
+    return `${phrase.slice(0, 1)}•••`;
+  }
+  return `${phrase.slice(0, 3)}•••${phrase.slice(-3)}`;
 };
 
 interface UserDefinesListProps {
@@ -40,6 +56,45 @@ interface UserDefinesListProps {
 const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
   const { options, onChange } = props;
   const { t } = useTranslation();
+
+  const [bindingPhraseHistory, setBindingPhraseHistory] = useState<string[]>(
+    [],
+  );
+  const [historyAnchorEl, setHistoryAnchorEl] = useState<HTMLElement | null>(
+    null,
+  );
+  const [showHistoryPhrases, setShowHistoryPhrases] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const storage = new ApplicationStorage();
+      setBindingPhraseHistory(await storage.getBindingPhraseHistory());
+    })();
+  }, []);
+
+  const onHistoryOpen
+    = (fieldName: string) =>
+      async (event: React.MouseEvent<HTMLElement>) => {
+        const anchor = event.currentTarget;
+        const storage = new ApplicationStorage();
+        const showData = await storage.getShowSensitiveFieldData(fieldName);
+        setShowHistoryPhrases(showData ?? false);
+        setHistoryAnchorEl(anchor);
+      };
+
+  const onHistoryClose = () => {
+    setHistoryAnchorEl(null);
+  };
+
+  const onRemoveBindingPhraseFromHistory = async (phrase: string) => {
+    const storage = new ApplicationStorage();
+    await storage.removeBindingPhraseFromHistory(phrase);
+    const updated = await storage.getBindingPhraseHistory();
+    setBindingPhraseHistory(updated);
+    if (updated.length === 0) {
+      onHistoryClose();
+    }
+  };
 
   const onChecked = (data: UserDefineKey) => {
     const opt = options.find(({ key }) => key === data);
@@ -135,6 +190,56 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
                     fullWidth
                     label={inputLabel(item.key)}
                   />
+                )}
+                {item.key === UserDefineKey.BINDING_PHRASE
+                  && bindingPhraseHistory.length > 0 && (
+                  <>
+                    <Tooltip
+                      title={t('UserDefinesList.BindingPhraseHistory')}
+                    >
+                      <IconButton
+                        aria-label={t('UserDefinesList.BindingPhraseHistory')}
+                        onClick={onHistoryOpen(item.key)}
+                      >
+                        <History />
+                      </IconButton>
+                    </Tooltip>
+                    <Menu
+                      anchorEl={historyAnchorEl}
+                      open={historyAnchorEl !== null}
+                      onClose={onHistoryClose}
+                    >
+                      {bindingPhraseHistory.map((phrase) => (
+                        <MenuItem
+                          key={phrase}
+                          onClick={() => {
+                            onChange({
+                              ...item,
+                              value: phrase,
+                            });
+                            onHistoryClose();
+                          }}
+                        >
+                          <ListItemText sx={styles.historyPhrase}>
+                            {showHistoryPhrases ? phrase : maskPhrase(phrase)}
+                          </ListItemText>
+                          <IconButton
+                            size="small"
+                            edge="end"
+                            aria-label={t(
+                              'UserDefinesList.BindingPhraseHistoryRemove',
+                            )}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onRemoveBindingPhraseFromHistory(phrase);
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </>
                 )}
               </ListItem>
             )}
