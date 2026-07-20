@@ -101,8 +101,25 @@ openssl genrsa -out developer-id.key 2048
 openssl req -new -key developer-id.key -out developer-id.csr \
   -subj "/emailAddress=you@example.com/CN=Your Name/C=US"
 
-# 2. create the certificate via the API (JWT signed with the Account Holder
-#    API key, see Apple's "Generating tokens for API requests" guide)
+# 2. short lived (max 20 minutes) API token, signed with the AuthKey_<KEY_ID>.p8
+#    downloaded when the key was created. The issuer id is the UUID shown at
+#    the top of Users and Access -> Integrations.
+export ASC_KEY_ID="XXXXXXXXXX"
+export ASC_ISSUER_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export ASC_JWT="$(python3 - <<'PYEOF'
+import time, os, jwt  # pip install pyjwt cryptography
+with open(f"AuthKey_{os.environ['ASC_KEY_ID']}.p8") as f:
+    key = f.read()
+now = int(time.time())
+print(jwt.encode(
+    {"iss": os.environ["ASC_ISSUER_ID"], "iat": now, "exp": now + 1200,
+     "aud": "appstoreconnect-v1"},
+    key, algorithm="ES256", headers={"kid": os.environ["ASC_KEY_ID"]}))
+PYEOF
+)"
+
+# 3. create the certificate (403 here usually means the API key was not
+#    created by the Account Holder)
 jq -n --rawfile csr developer-id.csr '{data: {type: "certificates",
     attributes: {certificateType: "DEVELOPER_ID_APPLICATION", csrContent: $csr}}}' \
   | curl -X POST https://api.appstoreconnect.apple.com/v1/certificates \
@@ -110,12 +127,12 @@ jq -n --rawfile csr developer-id.csr '{data: {type: "certificates",
       -H "Content-Type: application/json" \
       -d @-
 
-# 3. decode .cer from the base64 "certificateContent" in the response,
+# 4. decode .cer from the base64 "certificateContent" in the response,
 #    then bundle certificate + private key into the .p12 for CSC_LINK
 openssl pkcs12 -export -inkey developer-id.key -in developer-id.cer \
   -out DeveloperIdApplication.p12 -passout pass:chosen-password
 
-# 4. upload the secrets (see above)
+# 5. upload the secrets (see above)
 ```
 
 [fastlane](https://docs.fastlane.tools/actions/match/) automates the same
