@@ -68,3 +68,9 @@ dependencies/darwin_arm64/
 
 # CI download caches (ELECTRON_CACHE, ELECTRON_BUILDER_CACHE, DOWNLOAD_CACHE_DIR)
 .cache/
+
+# output of scripts/create-developer-id-certificate.sh: private keys and
+# certificates must never be committed
+developer-id-certificate/
+*.p8
+*.p12
