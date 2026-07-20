@@ -6,6 +6,16 @@ import { NoOpFunc, OnOutputFunc } from '../../../library/Commander';
 import Python from '../../../library/Python';
 import { LoggerService } from '../../../logger';
 
+/*
+  The flasher parses numeric flags with argparse type=int, an empty or
+  malformed value like --auto-wifi '' aborts the whole flashing run. Omitting
+  the flag keeps the firmware default instead.
+ */
+const numericFlagValue = (value: string | undefined): string | null => {
+  const trimmed = value?.trim() ?? '';
+  return /^\d+$/.test(trimmed) ? trimmed : null;
+};
+
 const maskSensitiveFlags = (data: string[][]): string[][] => {
   const sensitiveData = ['--phrase', '--ssid', '--password'];
   const result: string[][] = [];
@@ -156,7 +166,10 @@ export default class BinaryConfigurator {
           break;
         case UserDefineKey.AUTO_WIFI_ON_INTERVAL:
           if (userDefine.enabled) {
-            flags.push(['--auto-wifi', userDefine.value!]);
+            const autoWifiInterval = numericFlagValue(userDefine.value);
+            if (autoWifiInterval !== null) {
+              flags.push(['--auto-wifi', autoWifiInterval]);
+            }
           } else {
             flags.push(['--no-auto-wifi']);
           }
@@ -199,7 +212,10 @@ export default class BinaryConfigurator {
           break;
         case UserDefineKey.RCVR_UART_BAUD:
           if (userDefine.enabled) {
-            flags.push(['--rx-baud', userDefine.value!]);
+            const rxBaud = numericFlagValue(userDefine.value);
+            if (rxBaud !== null) {
+              flags.push(['--rx-baud', rxBaud]);
+            }
           }
           break;
         case UserDefineKey.RX_AS_TX:
@@ -209,8 +225,12 @@ export default class BinaryConfigurator {
           break;
         case UserDefineKey.TLM_REPORT_INTERVAL_MS:
           if (userDefine.enabled) {
-            const tlmReportIntervalMs = userDefine.value!.replaceAll('LU', '');
-            flags.push(['--tlm-report', tlmReportIntervalMs]);
+            const tlmReportIntervalMs = numericFlagValue(
+              userDefine.value?.replaceAll('LU', ''),
+            );
+            if (tlmReportIntervalMs !== null) {
+              flags.push(['--tlm-report', tlmReportIntervalMs]);
+            }
           }
           break;
         case UserDefineKey.UART_INVERTED:
