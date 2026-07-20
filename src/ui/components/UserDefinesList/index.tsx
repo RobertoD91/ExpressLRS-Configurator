@@ -13,7 +13,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import { History } from '@mui/icons-material';
+import { Close, History } from '@mui/icons-material';
 import { SxProps, Theme } from '@mui/system';
 import { useTranslation } from 'react-i18next';
 import {
@@ -36,6 +36,16 @@ const styles: Record<string, SxProps<Theme>> = {
       backgroundColor: 'transparent !important',
     },
   },
+  historyPhrase: {
+    marginRight: 2,
+  },
+};
+
+const maskPhrase = (phrase: string): string => {
+  if (phrase.length <= 8) {
+    return `${phrase.slice(0, 1)}•••`;
+  }
+  return `${phrase.slice(0, 3)}•••${phrase.slice(-3)}`;
 };
 
 interface UserDefinesListProps {
@@ -53,6 +63,7 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
   const [historyAnchorEl, setHistoryAnchorEl] = useState<HTMLElement | null>(
     null,
   );
+  const [showHistoryPhrases, setShowHistoryPhrases] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -60,6 +71,30 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
       setBindingPhraseHistory(await storage.getBindingPhraseHistory());
     })();
   }, []);
+
+  const onHistoryOpen
+    = (fieldName: string) =>
+      async (event: React.MouseEvent<HTMLElement>) => {
+        const anchor = event.currentTarget;
+        const storage = new ApplicationStorage();
+        const showData = await storage.getShowSensitiveFieldData(fieldName);
+        setShowHistoryPhrases(showData ?? false);
+        setHistoryAnchorEl(anchor);
+      };
+
+  const onHistoryClose = () => {
+    setHistoryAnchorEl(null);
+  };
+
+  const onRemoveBindingPhraseFromHistory = async (phrase: string) => {
+    const storage = new ApplicationStorage();
+    await storage.removeBindingPhraseFromHistory(phrase);
+    const updated = await storage.getBindingPhraseHistory();
+    setBindingPhraseHistory(updated);
+    if (updated.length === 0) {
+      onHistoryClose();
+    }
+  };
 
   const onChecked = (data: UserDefineKey) => {
     const opt = options.find(({ key }) => key === data);
@@ -164,9 +199,7 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
                     >
                       <IconButton
                         aria-label={t('UserDefinesList.BindingPhraseHistory')}
-                        onClick={(event) => {
-                          setHistoryAnchorEl(event.currentTarget);
-                        }}
+                        onClick={onHistoryOpen(item.key)}
                       >
                         <History />
                       </IconButton>
@@ -174,9 +207,7 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
                     <Menu
                       anchorEl={historyAnchorEl}
                       open={historyAnchorEl !== null}
-                      onClose={() => {
-                        setHistoryAnchorEl(null);
-                      }}
+                      onClose={onHistoryClose}
                     >
                       {bindingPhraseHistory.map((phrase) => (
                         <MenuItem
@@ -186,10 +217,25 @@ const UserDefinesList: FunctionComponent<UserDefinesListProps> = (props) => {
                               ...item,
                               value: phrase,
                             });
-                            setHistoryAnchorEl(null);
+                            onHistoryClose();
                           }}
                         >
-                          {phrase}
+                          <ListItemText sx={styles.historyPhrase}>
+                            {showHistoryPhrases ? phrase : maskPhrase(phrase)}
+                          </ListItemText>
+                          <IconButton
+                            size="small"
+                            edge="end"
+                            aria-label={t(
+                              'UserDefinesList.BindingPhraseHistoryRemove',
+                            )}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onRemoveBindingPhraseFromHistory(phrase);
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
                         </MenuItem>
                       ))}
                     </Menu>

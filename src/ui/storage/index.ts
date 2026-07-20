@@ -63,6 +63,8 @@ export interface IApplicationStorage {
   getBindingPhraseHistory(): Promise<string[]>;
 
   addBindingPhraseToHistory(phrase: string): Promise<void>;
+
+  removeBindingPhraseFromHistory(phrase: string): Promise<void>;
 }
 
 const DEVICE_OPTIONS_BY_TARGET_KEYSPACE = 'device_options';
@@ -303,6 +305,12 @@ export default class ApplicationStorage implements IApplicationStorage {
       trimmed,
       ...history.filter((item) => item !== trimmed),
     ].slice(0, BINDING_PHRASE_HISTORY_LIMIT);
+    localStorage.setItem(BINDING_PHRASE_HISTORY_KEY, JSON.stringify(updated));
+  }
+
+  async removeBindingPhraseFromHistory(phrase: string): Promise<void> {
+    const history = await this.getBindingPhraseHistory();
+    const updated = history.filter((item) => item !== phrase);
     localStorage.setItem(BINDING_PHRASE_HISTORY_KEY, JSON.stringify(updated));
   }
 }

@@ -213,6 +213,7 @@
   },
   "UserDefinesList": {
     "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Custom binding phrase",
     "MyStartupMelody": "My startup melody",
     "Value": "Value"
