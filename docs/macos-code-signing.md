@@ -34,7 +34,7 @@ Developer ID certificates (an Admin is not enough).
    [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/certificates/list)
    (or via Xcode → Settings → Accounts → Manage Certificates), install it in
    your login keychain, then export it from Keychain Access as a `.p12` file
-   with a password. See below for creating it from the command line instead.
+   with a password.
 3. An **app-specific password** for your Apple ID, generated at
    [account.apple.com](https://account.apple.com/account/manage) → App-Specific
    Passwords. This is *not* your Apple ID password.
@@ -80,64 +80,10 @@ The next run of the `Publish` workflow will pick them up automatically; the
 build log shows a `skipped macOS notarization` warning when the credentials
 are absent and `notarization successful` when they are used.
 
-## Can the certificate request be automated?
-
-Partially. What always stays manual (one time each):
-
-- enrolling in the Apple Developer Program and accepting its agreements;
-- the Account Holder uploading the CSR on the developer portal (two clicks,
-  the script below prepares everything else);
-- creating an **App Store Connect API key** in
-  [Users and Access → Integrations](https://appstoreconnect.apple.com/access/integrations/api)
-  — only needed for the optional API variant of the script or for API based
-  notarization;
-- generating the app-specific password used for notarization.
-
-### The script
-
-`scripts/create-developer-id-certificate.sh` drives the whole flow (only
-needs `openssl`, plus `curl`/`jq` for the API variant). The reliable path is
-the **developer portal flow** — Apple reserves Developer ID certificates for
-the Account Holder and, as of mid 2026, rejects the API creation in practice
-even for Admin team keys the Account Holder generated
-(`403 This operation can only be performed by the Account Holder`, see
-[fastlane#27149](https://github.com/fastlane/fastlane/issues/27149);
-individual keys [cannot use the provisioning endpoints at all](https://developer.apple.com/documentation/appstoreconnectapi/creating-api-keys-for-app-store-connect-api)):
-
-```bash
-# 1. generate private key + CSR (no API key needed)
-./scripts/create-developer-id-certificate.sh --csr-only
-
-# 2. as the Account Holder, upload the CSR on
-#    https://developer.apple.com/account/resources/certificates/add
-#    (Developer ID Application) and download the .cer
-
-# 3. package the certificate and upload the CI secrets
-./scripts/create-developer-id-certificate.sh \
-  --import-cer developerID_application.cer --upload-secrets
-```
-
-The script verifies that the certificate matches the private key, exports
-`DeveloperIdApplication.p12` (0600) and, with `--upload-secrets`, sets the
-`CSC_LINK`/`CSC_KEY_PASSWORD` repository secrets through `gh`. Every
-configuration value is a command line option, `--help` lists them. Re-run
-the same flow to renew the certificate when it expires after 5 years.
-
-The API variant (`--key-file` + `--issuer-id`, token generation handled
-internally) stays available in case Apple opens up API creation again;
-`--check` validates the credentials without creating anything.
-
-For **notarization** the requirements are looser: the app-specific password
-or a team key with App Manager access is enough (individual keys do not work
-with notarytool).
-
-[fastlane](https://docs.fastlane.tools/actions/match/) (`match` with
-`type: "developer_id"`) is an alternative with certificate storage and
-rotation included, worth it if you manage more than one certificate.
-
-Notarization can alternatively authenticate with the same App Store Connect
-API key instead of the app-specific password: electron-builder supports the
+Notarization can alternatively authenticate with an App Store Connect API
+key instead of the app-specific password: electron-builder supports the
 `APPLE_API_KEY` (path to the `.p8` file), `APPLE_API_KEY_ID` and
 `APPLE_API_ISSUER` environment variables. The publish workflow currently
 wires the app-specific password variant, switching would require a small
-workflow change to write the key file to disk first.
+workflow change to write the key file to disk first. Note that individual
+API keys do not work with notarytool, use a team key.
