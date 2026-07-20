@@ -6,5 +6,11 @@
     <true/>
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
+    <!-- required for the ad-hoc signed arm64/universal builds: the hardened
+         runtime otherwise refuses to load the Electron Framework, whose
+         ad-hoc signature carries no Team ID
+         https://github.com/electron-userland/electron-builder/issues/3940 -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
   </dict>
 </plist>
