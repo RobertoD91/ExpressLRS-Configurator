@@ -67,11 +67,11 @@ jobs:
         run: |
           yarn package
 
-      - name: yarn package (macOS x64 + arm64 + universal)
+      - name: yarn package (macOS x64 + arm64)
         if: matrix.os == 'macos-latest'
         run: |
           yarn build
-          yarn electron-builder build --publish never --x64 --arm64 --universal --mac
+          yarn electron-builder build --publish never --x64 --arm64 --mac
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

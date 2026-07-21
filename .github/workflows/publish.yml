@@ -77,7 +77,7 @@ jobs:
             unset CSC_LINK CSC_KEY_PASSWORD
           fi
           yarn build
-          yarn electron-builder --publish always --x64 --arm64 --universal --mac
+          yarn electron-builder --publish always --x64 --arm64 --mac
 
       - name: Publish Linux releases
         if: matrix.os == 'ubuntu-22.04'
