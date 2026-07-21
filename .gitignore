@@ -61,3 +61,7 @@ patch_targets*
 patcher
 
 TODO.md
+
+# downloaded by dependencies/download-mac-dependencies.sh
+dependencies/darwin_x64/
+dependencies/darwin_arm64/

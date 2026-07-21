@@ -281,20 +281,30 @@ const createWindow = async () => {
     PATH = prependPATH(PATH, portableGitLocation);
   }
   if (isMacOS) {
-    const portablePythonLocation = path.join(
+    const macDependenciesPath = path.join(
       dependenciesPath,
-      'darwin_amd64/python-portable-darwin-3.8.4/bin',
+      `darwin_${process.arch}`,
+    );
+    const portablePythonLocation = path.join(
+      macDependenciesPath,
+      'python-portable/bin',
     );
     const portableGitLocation = path.join(
-      dependenciesPath,
-      'darwin_amd64/git-2.29.2/bin',
+      macDependenciesPath,
+      'git-portable/bin',
     );
-    PATH = prependPATH(PATH, portablePythonLocation);
-    PATH = prependPATH(PATH, portableGitLocation);
-    localApiServerEnv.GIT_EXEC_PATH = path.join(
-      dependenciesPath,
-      'darwin_amd64/git-2.29.2/libexec/git-core',
-    );
+    // fall back to the system tools when the portable dependencies have not
+    // been downloaded, for example during local development
+    if (fs.existsSync(portablePythonLocation)) {
+      PATH = prependPATH(PATH, portablePythonLocation);
+    }
+    if (fs.existsSync(portableGitLocation)) {
+      PATH = prependPATH(PATH, portableGitLocation);
+      localApiServerEnv.GIT_EXEC_PATH = path.join(
+        macDependenciesPath,
+        'git-portable/libexec/git-core',
+      );
+    }
   }
   localApiServerEnv.PATH = PATH;
 
