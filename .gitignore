@@ -65,3 +65,8 @@ TODO.md
 # downloaded by dependencies/download-mac-dependencies.sh
 dependencies/darwin_x64/
 dependencies/darwin_arm64/
+
+# private keys and certificates must never be committed to this public repo
+developer-id-certificate/
+*.p8
+*.p12

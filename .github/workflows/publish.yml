@@ -65,21 +65,30 @@ jobs:
       - name: Publish macOS releases
         if: matrix.os == 'macos-15'
         env:
-          # Code signing and notarization secrets, see
-          # docs/macos-code-signing.md. When they are not configured the
-          # steps are skipped and the build stays unsigned, like before.
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Signing + notarization, see docs/macos-code-signing.md. When the
+          # secrets are absent (forks, upstream) the build stays unsigned and
+          # the workflow still succeeds, exactly like before.
+          # electron-builder reads the base64 .p12 straight from CSC_LINK.
+          CSC_LINK: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          # Notarization authenticates with the App Store Connect API key.
+          APPLE_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           # This is used for uploading release assets to github
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # electron-builder treats an empty CSC_LINK as a certificate to
-          # import, drop the signing variables when the secrets are missing
           if [ -z "$CSC_LINK" ]; then
-            unset CSC_LINK CSC_KEY_PASSWORD
+            # no certificate: build unsigned, drop every signing/notarization var
+            unset CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER
+          elif [ -n "$APP_STORE_CONNECT_API_KEY_BASE64" ]; then
+            # electron-builder wants APPLE_API_KEY to be the path to the .p8 file
+            APPLE_API_KEY="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+            echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > "$APPLE_API_KEY"
+            export APPLE_API_KEY
+          else
+            # certificate but no API key: sign without notarizing
+            unset APPLE_API_KEY_ID APPLE_API_ISSUER
           fi
           yarn build
           yarn electron-builder --publish always --x64 --arm64 --mac "-c.publish.owner=${{ github.repository_owner }}" "-c.publish.repo=${{ github.event.repository.name }}"
