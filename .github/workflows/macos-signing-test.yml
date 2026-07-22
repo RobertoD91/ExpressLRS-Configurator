@@ -102,9 +102,11 @@ jobs:
           echo "== notarization ticket stapled to the app =="
           xcrun stapler validate "$APP"
 
-          if [ -n "$DMG" ]; then
-            echo "== notarization ticket stapled to the dmg =="
-            xcrun stapler validate "$DMG" || echo "(dmg itself not stapled; the app inside is)"
+          echo "== notarization ticket stapled to the dmg =="
+          if [ -z "$DMG" ]; then
+            echo "::error::no .dmg was produced"
+            exit 1
           fi
+          xcrun stapler validate "$DMG"
 
-          echo "OK: the app is signed, notarized and stapled."
+          echo "OK: the app and the dmg are signed, notarized and stapled."

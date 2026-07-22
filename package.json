@@ -39,6 +39,7 @@
       "devices/"
     ],
     "afterPack": ".erb/scripts/mac-dependencies.js",
+    "afterAllArtifactBuild": ".erb/scripts/notarize-dmg.js",
     "mac": {
       "target": [
         "dmg"
