@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "UART_INVERTED를 비활성화하는 것은 특별한 경우에만 필요합니다. 사용 중인 송신기가 이를 필요로 하는지 꼭 확인하세요."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "사용자 지정 바인딩 문구",
     "MyStartupMelody": "시작 멜로디 설정",
     "Value": "값"

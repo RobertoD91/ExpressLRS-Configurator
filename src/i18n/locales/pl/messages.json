@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Wyłączanie opcji UART_INVERTED jest rzadkie. Upewnij się, że twój transmiter tego wymaga."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Własna fraza parująca.",
     "MyStartupMelody": "Mój dźwięk uruchamiania.",
     "Value": "Wartość"

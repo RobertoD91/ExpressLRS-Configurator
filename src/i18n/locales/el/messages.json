@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Η απενεργοποίηση της επιλογής UART_INVERTED είναι κάτι ασυνήθιστο. Βεβαιωθείτε ότι η Τ/Κ σας το υποστηρίζει."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Προσαρμοσμένη φράση binding",
     "MyStartupMelody": "Μελωδία εκκίνησης",
     "Value": "Τιμή"

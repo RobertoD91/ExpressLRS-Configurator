@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Отключение UART_INVERTED используется редко. Пожалуйста, убедитесь, что передатчик поддерживает это."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Пользовательская бинд фраза",
     "MyStartupMelody": "Стартовая мелодия",
     "Value": "Значение"

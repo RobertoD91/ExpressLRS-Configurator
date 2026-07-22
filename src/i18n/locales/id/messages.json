@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Menonaktif UART_INVERTED adalah hal yang tidak umum. Mohon pastikan transmitter anda mendukungnya."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Frase penghubung custom",
     "MyStartupMelody": "Nada start-up saya",
     "Value": "Nilai"

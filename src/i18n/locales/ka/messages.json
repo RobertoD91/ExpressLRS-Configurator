@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "UART_INVERTED-ის გამორთვა იშვიათი შემთხვევაა. გთხოვთ დარწმუნდეთ, რომ თქვენი გადამცემი მხარს უჭერს ამ რეჟიმს."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "მომხმარებლის დაკავშირების ფრაზა",
     "MyStartupMelody": "ჩემი ჩართვის მელოდია",
     "Value": "მნიშვნელობა"

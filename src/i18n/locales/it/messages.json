@@ -14,8 +14,8 @@
       "VERIFYING_BUILD_SYSTEM": "Verifica dell'ambiente di build",
       "DOWNLOADING_FIRMWARE": "Scarico il firmware",
       "BUILDING_FIRMWARE": "Compilazione firmware",
-      "INITIATING_PASSTHROUGH": "Initiating passthrough",
-      "INITIATING_PASSTHROUGH_completed": "Passthrough done",
+      "INITIATING_PASSTHROUGH": "Avvio del passaggio",
+      "INITIATING_PASSTHROUGH_completed": "Passaggio completato",
       "FLASHING_FIRMWARE": "Flash del firmware sul dispositivo"
     },
     "Status": {
@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Disabilitare UART_INVERTED non è comune. Assicurati che il tuo trasmettitore lo supporti."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Frasi di associazione usate recentemente",
+    "BindingPhraseHistoryRemove": "Rimuovi da cronologia",
     "CustomBindingPhrase": "Frase di associazione personalizzata",
     "MyStartupMelody": "Melodia all'avvio",
     "Value": "Valore"
