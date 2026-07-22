@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Desabilitar UART_INVERTED é incomum. Por favor, certifique-se de que seu transmissor suporta isso."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Frase de conexão personalizada",
     "MyStartupMelody": "Minha melodia de inicialização",
     "Value": "Valor"

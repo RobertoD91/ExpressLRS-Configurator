@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "Désactiver UART_INVERTED est rare. Veuillez vous assurer que votre transmetteur le supporte."
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "Recently used binding phrases",
+    "BindingPhraseHistoryRemove": "Remove from history",
     "CustomBindingPhrase": "Phrase d'appairage personnalisée",
     "MyStartupMelody": "Ma mélodie de démarrage",
     "Value": "Valeur"

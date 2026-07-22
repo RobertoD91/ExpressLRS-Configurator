@@ -212,6 +212,8 @@
     "DisableUARTInvertedWarning": "禁用 UART_INVERTED 是不常见的。请确保你的遥控器支持这一点。"
   },
   "UserDefinesList": {
+    "BindingPhraseHistory": "最近使用的对频短语",
+    "BindingPhraseHistoryRemove": "从历史记录中移除",
     "CustomBindingPhrase": "自定义对频短语",
     "MyStartupMelody": "我的启动旋律",
     "Value": "值"
