@@ -124,12 +124,16 @@ jobs:
           echo "Release id: $REL_ID"
           # Remove the un-stapled DMGs electron-builder uploaded during the build.
           # Matching on the .dmg extension is immune to GitHub's space->dot rename.
+          # The delete-asset endpoint is /releases/assets/{id} - it does NOT take
+          # the release id (only the list and upload endpoints do). A 404 means the
+          # asset is already gone, which is the state we want, so tolerate it.
           gh api "repos/$OWNER/$REPO/releases/$REL_ID/assets?per_page=100" \
             --jq '.[] | select(.name | endswith(".dmg")) | .id' \
           | while read -r asset_id; do
               [ -n "$asset_id" ] || continue
               echo "Deleting old DMG asset $asset_id"
-              gh api --method DELETE "repos/$OWNER/$REPO/releases/$REL_ID/assets/$asset_id"
+              gh api --method DELETE "repos/$OWNER/$REPO/releases/assets/$asset_id" \
+                || echo "asset $asset_id already gone, continuing"
             done
           # Upload the stapled DMGs the hook left in release/.
           for dmg in release/*.dmg; do
