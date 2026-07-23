@@ -48,10 +48,11 @@ exports.default = async function notarizeDmg({ artifactPaths }) {
     execFileSync('xcrun', ['stapler', 'staple', dmg], { stdio: 'inherit' });
   }
 
-  // Return the DMGs so electron-builder re-publishes them. With --publish
-  // always it uploads the DMG *before* this hook runs, so the release first
-  // receives the un-stapled file; re-publishing the stapled copy here makes
-  // the GitHub publisher overwrite that asset (it deletes and re-uploads on
-  // "already_exists"). With --publish never (the signing test) this is a no-op.
-  return dmgs;
+  // Nothing to return here. With --publish always electron-builder uploads the
+  // DMG as soon as it is built - before this hook runs - and then refuses to
+  // re-publish it ("already published"), so returning it does not help. The
+  // release asset is instead overwritten with this now-stapled local copy by a
+  // dedicated step in publish.yml. Under --publish never (the signing test)
+  // nothing was uploaded, so the stapled local DMG is all that matters.
+  return [];
 };

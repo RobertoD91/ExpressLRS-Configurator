@@ -93,6 +93,56 @@ jobs:
           yarn build
           yarn electron-builder --publish always --x64 --arm64 --mac "-c.publish.owner=${{ github.repository_owner }}" "-c.publish.repo=${{ github.event.repository.name }}"
 
+      # electron-builder uploads each DMG the moment it is built - before the
+      # afterAllArtifactBuild hook (.erb/scripts/notarize-dmg.js) notarizes and
+      # staples it - and then refuses to publish the same file again ("already
+      # published"). The release would otherwise keep the un-stapled DMG. Swap in
+      # the stapled local copies here, now that the hook has finished. This only
+      # does anything when notarization actually ran (App Store Connect API key
+      # present); unsigned forks/upstream skip it and keep electron-builder's DMG.
+      - name: Attach the notarized, stapled macOS DMGs to the release
+        if: matrix.os == 'macos-15'
+        env:
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          if [ -z "$APP_STORE_CONNECT_API_KEY_BASE64" ]; then
+            echo "notarization not configured; DMGs were not stapled, nothing to re-upload"
+            exit 0
+          fi
+          VERSION="$(node -p "require('./release/app/package.json').version")"
+          TAG="v${VERSION}"
+          echo "Resolving release $TAG (drafts included)"
+          REL_ID="$(gh api "repos/$OWNER/$REPO/releases?per_page=100" \
+            --jq "map(select(.tag_name==\"$TAG\")) | .[0].id // empty")"
+          if [ -z "$REL_ID" ]; then
+            echo "::error::release $TAG not found; cannot attach the stapled DMGs"
+            exit 1
+          fi
+          echo "Release id: $REL_ID"
+          # Remove the un-stapled DMGs electron-builder uploaded during the build.
+          # Matching on the .dmg extension is immune to GitHub's space->dot rename.
+          gh api "repos/$OWNER/$REPO/releases/$REL_ID/assets?per_page=100" \
+            --jq '.[] | select(.name | endswith(".dmg")) | .id' \
+          | while read -r asset_id; do
+              [ -n "$asset_id" ] || continue
+              echo "Deleting old DMG asset $asset_id"
+              gh api --method DELETE "repos/$OWNER/$REPO/releases/$REL_ID/assets/$asset_id"
+            done
+          # Upload the stapled DMGs the hook left in release/.
+          for dmg in release/*.dmg; do
+            [ -e "$dmg" ] || continue
+            name="$(basename "$dmg" | tr ' ' '.')"
+            echo "Uploading stapled $name"
+            gh api --method POST \
+              -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/$OWNER/$REPO/releases/$REL_ID/assets?name=$name" \
+              --input "$dmg"
+          done
+          echo "Done: the release now carries the notarized, stapled DMGs."
+
       - name: Publish Linux releases
         if: matrix.os == 'ubuntu-22.04'
         env:
