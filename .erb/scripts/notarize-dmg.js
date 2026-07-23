@@ -48,5 +48,10 @@ exports.default = async function notarizeDmg({ artifactPaths }) {
     execFileSync('xcrun', ['stapler', 'staple', dmg], { stdio: 'inherit' });
   }
 
-  return [];
+  // Return the DMGs so electron-builder re-publishes them. With --publish
+  // always it uploads the DMG *before* this hook runs, so the release first
+  // receives the un-stapled file; re-publishing the stapled copy here makes
+  // the GitHub publisher overwrite that asset (it deletes and re-uploads on
+  // "already_exists"). With --publish never (the signing test) this is a no-op.
+  return dmgs;
 };
